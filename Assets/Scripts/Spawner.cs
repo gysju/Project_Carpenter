@@ -7,7 +7,8 @@ public class Spawner : MonoBehaviour {
 	void Start () {
 		
 	}
-	
+    
+	[ContextMenu("Spawn")]
 	void Update () {
 		
 	}

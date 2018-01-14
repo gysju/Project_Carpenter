@@ -11,7 +11,7 @@ public class Player : MonoBehaviour {
     [SerializeField] AnimationCurve _speedCurve;
 
     private Transform _transform;
-    private Spawner _currentLine;
+    private int _currentAnchor = 0;
 
 	void Awake ()
     {
@@ -25,28 +25,34 @@ public class Player : MonoBehaviour {
             Destroy(gameObject);
         }
 	}
-	
-	void Update ()
+
+    public void InitPlayer(int originPos)
     {
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        _currentAnchor = originPos;
+        _transform.position = GameManager.Instance.PlayerAnchors[_currentAnchor].position;
+    }
+
+    void Update ()
+    {
+        if (_currentAnchor > 0 && Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            StartCoroutine( Move(_transform.position, _transform.position - new Vector3(GameManager.Instance.SpaceBetweenToSpawn, 0.0f, 0.0f)));
+            StartCoroutine( Move(GameManager.Instance.PlayerAnchors[_currentAnchor], GameManager.Instance.PlayerAnchors[--_currentAnchor]));
         }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        else if (_currentAnchor < (GameManager.Instance.PlayerAnchors.Count - 1) && Input.GetKeyDown(KeyCode.RightArrow))
         {
-            StartCoroutine( Move(_transform.position, _transform.position + new Vector3(GameManager.Instance.SpaceBetweenToSpawn, 0.0f, 0.0f)));
+            StartCoroutine( Move(GameManager.Instance.PlayerAnchors[_currentAnchor], GameManager.Instance.PlayerAnchors[++_currentAnchor]));
         }
     }
 
-    private IEnumerator Move( Vector3 origin, Vector3 destination)
+    private IEnumerator Move( Transform origin, Transform destination)
     {
         float t = 0.0f;
         while ( t < _speed)
         {
-            _transform.position = Vector3.Lerp( origin, destination, _speedCurve.Evaluate( t / _speed ));
+            _transform.position = Vector3.Lerp( origin.position, destination.position, _speedCurve.Evaluate( t / _speed ));
             t += Time.deltaTime;
             yield return null;
         }
-        _transform.position = destination;
+        _transform.position = destination.position;
     }
 }

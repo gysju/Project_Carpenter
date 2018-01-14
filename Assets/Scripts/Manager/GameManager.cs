@@ -7,10 +7,12 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     public List<Spawner> Spawners = new List<Spawner>();
+    public List<Transform> PlayerAnchors = new List<Transform>();
     public int SpwnNB = 3;
     public float SpaceBetweenToSpawn = 3.0f;
 
     [SerializeField] private Transform SpwnParent;
+    [SerializeField] private Transform PlayerAnchorsParent;
 
     private void Awake()
     {
@@ -23,11 +25,36 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    [ContextMenu("Init game")]
     void Start ()
     {
+        if (Spawners != null || PlayerAnchors != null)
+            Clean();
+
         SpawnSpawner();
+        SpawnPlayerAnchor();
+
+        if(Player.Instance != null)
+            Player.Instance.InitPlayer((SpwnNB - 1) / 2);
     }
-	
+
+    void Clean()
+    {
+        foreach (Spawner spawn in Spawners)
+        {
+            Destroy(spawn.gameObject);
+        }
+
+        foreach (Transform trans in PlayerAnchors)
+        {
+            Destroy(trans.gameObject);
+        }
+
+        Spawners.Clear();
+        PlayerAnchors.Clear();
+    }
+
 	void Update ()
     {
 		
@@ -50,12 +77,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
+    void SpawnPlayerAnchor()
     {
-        DrawSpawner();
+        PlayerAnchorsParent = transform.Find("PlayerAnchors");
+        float space = (SpaceBetweenToSpawn * (SpwnNB - 1)) / 2.0f;
+        float x = -space;
+
+        for (int i = 0; i < SpwnNB; i++)
+        {
+            GameObject anchor = new GameObject("Anchor_" + i);
+            PlayerAnchors.Add(anchor.transform);
+            anchor.transform.parent = PlayerAnchorsParent.transform;
+            anchor.transform.position = new Vector3(x, PlayerAnchorsParent.position.y, PlayerAnchorsParent.position.z);
+            anchor.transform.localRotation = Quaternion.identity;
+
+            x += SpaceBetweenToSpawn;
+        }
     }
 
-    private void DrawSpawner()
+    private void OnDrawGizmos()
+    {
+        DrawSpawners();
+        DrawPlayerAnchors();
+    }
+
+    private void DrawSpawners()
     {
         foreach (Spawner spawn in Spawners)
         {
@@ -66,6 +112,15 @@ public class GameManager : MonoBehaviour
 
             //destination
             Gizmos.DrawWireSphere(spawn.transform.position + spawn.transform.forward * 50, 0.1f);
+        }
+    }
+
+    private void DrawPlayerAnchors()
+    {
+        foreach (Transform anchor in PlayerAnchors)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(anchor.position, 0.1f);
         }
     }
 }
