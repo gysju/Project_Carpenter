@@ -6,11 +6,16 @@ using System.Linq;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+
     public List<Spawner> Spawners = new List<Spawner>();
     public List<Transform> PlayerAnchors = new List<Transform>();
+
+    [Header("Details")]
     public int SpwnNB = 3;
+    public float SpawnDistance = 10.0f;
     public float SpaceBetweenToSpawn = 3.0f;
 
+    [Header("Parents")]
     [SerializeField] private Transform SpwnParent;
     [SerializeField] private Transform PlayerAnchorsParent;
 
@@ -32,7 +37,7 @@ public class GameManager : MonoBehaviour
         if (Spawners != null || PlayerAnchors != null)
             Clean();
 
-        SpawnSpawner();
+        SpawnSpawnerAnchor();
         SpawnPlayerAnchor();
 
         if(Player.Instance != null)
@@ -42,14 +47,12 @@ public class GameManager : MonoBehaviour
     void Clean()
     {
         foreach (Spawner spawn in Spawners)
-        {
-            Destroy(spawn.gameObject);
-        }
+            if(spawn != null)
+                DestroyImmediate(spawn.gameObject);
 
         foreach (Transform trans in PlayerAnchors)
-        {
-            Destroy(trans.gameObject);
-        }
+            if(trans != null)
+                DestroyImmediate(trans.gameObject);
 
         Spawners.Clear();
         PlayerAnchors.Clear();
@@ -60,9 +63,17 @@ public class GameManager : MonoBehaviour
 		
 	}
 
-    void SpawnSpawner()
+    void SpawnSpawnerAnchor()
     {
         SpwnParent = transform.Find("Spawns");
+        if (SpwnParent == null)
+        {
+            SpwnParent = new GameObject("Spawns").transform;
+            SpwnParent.transform.parent = transform;
+            SpwnParent.transform.localPosition = new Vector3(0.0f, 1.0f, SpawnDistance);
+            SpwnParent.transform.Rotate(new Vector3(0.0f, 180.0f, 0.0f));
+        }
+
         float space = (SpaceBetweenToSpawn * (SpwnNB - 1)) / 2.0f;
         float x = -space;
         for (int i = 0; i < SpwnNB; i++)
@@ -80,6 +91,13 @@ public class GameManager : MonoBehaviour
     void SpawnPlayerAnchor()
     {
         PlayerAnchorsParent = transform.Find("PlayerAnchors");
+        if (PlayerAnchorsParent == null)
+        {
+            PlayerAnchorsParent = new GameObject("PlayerAnchors").transform;
+            PlayerAnchorsParent.transform.parent = transform;
+            PlayerAnchorsParent.transform.localPosition = Vector3.up;
+        }
+
         float space = (SpaceBetweenToSpawn * (SpwnNB - 1)) / 2.0f;
         float x = -space;
 
@@ -105,6 +123,9 @@ public class GameManager : MonoBehaviour
     {
         foreach (Spawner spawn in Spawners)
         {
+            if (spawn == null)
+                continue;
+
             // origin
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(spawn.transform.position, 0.1f);
@@ -119,6 +140,9 @@ public class GameManager : MonoBehaviour
     {
         foreach (Transform anchor in PlayerAnchors)
         {
+            if (anchor == null)
+                continue;
+
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(anchor.position, 0.1f);
         }
